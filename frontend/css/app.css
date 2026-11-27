@@ -94,3 +94,6 @@ table code { font-size: 0.8rem; color: var(--accent); }
 .stat.danger { color: var(--danger); }
 .footer-note { margin-top: 1rem; font-size: 0.78rem; color: var(--muted); }
 .matrix-empty { color: var(--muted); }
+tr.archived td { opacity: 0.45; }
+tr.archived code { text-decoration: line-through; }
+.pill.archived { background: rgba(147,160,184,0.15); color: var(--muted); }

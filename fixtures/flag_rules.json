@@ -42,5 +42,16 @@
     "version": 3,
     "official": 1,
     "updated_at": 1700250000.0
+  },
+  {
+    "id": 5,
+    "flag_id": 6,
+    "env_id": 3,
+    "kind": "percent",
+    "percent": 40,
+    "cohort_id": null,
+    "version": 1,
+    "official": 1,
+    "updated_at": 1700300000.0
   }
 ]

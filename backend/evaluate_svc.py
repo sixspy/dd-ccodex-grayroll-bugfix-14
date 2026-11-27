@@ -99,7 +99,7 @@ def evaluate(body: EvalIn, authorization: str | None = Header(default=None)):
 
 @router.get("/board")
 def eval_board(authorization: str | None = Header(default=None)):
-    """总览：各环境正式规则摘要。"""
+    """总览：各环境正式规则摘要（gbf14：联查剔除灰态归档，归档不进规则板）。"""
     current_user(authorization)
     with connect() as conn:
         rows = [
@@ -111,17 +111,18 @@ def eval_board(authorization: str | None = Header(default=None)):
                 JOIN flags f ON f.id=r.flag_id
                 JOIN environments e ON e.id=r.env_id
                 WHERE r.official=1
-                -- BUGFIX-14 埋雷：故意不剔除 archived
+                  AND f.status != 'archived'
                 ORDER BY f.key, e.risk_level
                 """
             ).fetchall()
         ]
-        # 强制把 archived 也算可命中
+        # 仅非归档、且确实带正式规则的开关才算可命中；归档开关一律不可命中。
         for r in rows:
-            if r.get("status") == "archived":
-                r["hit_eligible"] = True
+            r["hit_eligible"] = r.get("status") != "archived"
+        # 可放量计数与正式名册同源：直接数 rollout_roster。
+        releasable = conn.execute("SELECT COUNT(*) c FROM rollout_roster").fetchone()["c"]
         by_status = [
             dict(x)
             for x in conn.execute("SELECT status, COUNT(*) c FROM flags GROUP BY status").fetchall()
         ]
-    return {"rules": rows, "by_status": by_status}
+    return {"rules": rows, "by_status": by_status, "releasable_count": releasable}

@@ -15,9 +15,9 @@ def dashboard(authorization: str | None = Header(default=None)):
     current_user(authorization)
     with connect() as conn:
         flags = conn.execute("SELECT COUNT(*) c FROM flags").fetchone()["c"]
-        # BUGFIX-14 埋雷：归档开关计入活跃虚高
+        # 灰态归档开关不得计入已生效（gbf14：原口径把 archived 算入导致虚高假绿）。
         active = conn.execute(
-            "SELECT COUNT(*) c FROM flags WHERE status IN ('active','archived')"
+            "SELECT COUNT(*) c FROM flags WHERE status='active'"
         ).fetchone()["c"]
         killed = conn.execute("SELECT COUNT(*) c FROM flags WHERE status='killed'").fetchone()["c"]
         releases = conn.execute("SELECT COUNT(*) c FROM releases WHERE official=1").fetchone()["c"]
@@ -25,6 +25,8 @@ def dashboard(authorization: str | None = Header(default=None)):
             "SELECT COUNT(*) c FROM release_shadows WHERE status='open'"
         ).fetchone()["c"]
         overrides = conn.execute("SELECT COUNT(*) c FROM overrides WHERE active=1").fetchone()["c"]
+        # 可放量计数与正式名册同源：直接数 rollout_roster（其刷新已同事务剔除灰态）。
+        releasable = conn.execute("SELECT COUNT(*) c FROM rollout_roster").fetchone()["c"]
         by_status = [
             {
                 "status": r["status"],
@@ -46,6 +48,7 @@ def dashboard(authorization: str | None = Header(default=None)):
         "releases": releases,
         "open_shadows": shadows,
         "active_overrides": overrides,
+        "releasable_count": releasable,
         "by_status": by_status,
         "recent": recent,
     }

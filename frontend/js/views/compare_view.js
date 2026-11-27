@@ -35,8 +35,11 @@ export const CompareView = {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="row in matrix.matrix" :key="row.flag_id">
-              <td>{{ row.flag_key }}</td>
+            <tr v-for="row in matrix.matrix" :key="row.flag_id" :class="{archived: row.status==='archived'}">
+              <td>
+                {{ row.flag_key }}
+                <span class="pill archived" v-if="row.status==='archived'">灰态归档·不入名册</span>
+              </td>
               <td v-for="c in row.cells" :key="c.env_id">
                 <span v-if="c.has_rule">{{ c.percent }}% v{{ c.version }}</span>
                 <span v-else class="muted">—</span>

@@ -21,6 +21,7 @@ from locks import router as locks_router
 from overrides_svc import router as overrides_router
 from releases_svc import router as releases_router
 from restore_svc import router as restore_router
+from roster_svc import router as roster_router
 from schedules_svc import router as schedules_router
 from rules_svc import router as rules_router
 from stubs_svc import router as stubs_router
@@ -46,6 +47,7 @@ for r in (
     rules_router,
     releases_router,
     restore_router,
+    roster_router,
     schedules_router,
     compare_router,
     kill_router,

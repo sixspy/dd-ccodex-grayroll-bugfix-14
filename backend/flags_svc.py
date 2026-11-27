@@ -81,4 +81,8 @@ def archive_flag(flag_id: int, authorization: str | None = Header(default=None))
         write_history(conn, user["username"], "archive", f"归档 {row['key']}", flag_id=flag_id)
         write_audit(conn, user["username"], "archive", "flag", flag_id, row["key"])
         conn.commit()
+    # 归档即灰态出名册：按同一联查口径即时重建，杜绝归档后到下次刷新间的陈旧窗口。
+    from roster_svc import rebuild_roster
+
+    rebuild_roster()
     return {"id": flag_id, "status": "archived"}

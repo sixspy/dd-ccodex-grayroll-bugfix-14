@@ -20,5 +20,16 @@
     "official": 1,
     "published_at": 1700150000.0,
     "published_by": "admin"
+  },
+  {
+    "id": 3,
+    "flag_id": 6,
+    "env_id": 3,
+    "version": 1,
+    "summary": "旧版券包末次放量（已灰态归档）",
+    "status": "published",
+    "official": 1,
+    "published_at": 1700300000.0,
+    "published_by": "writer"
   }
 ]

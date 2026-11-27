@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 from pathlib import Path
 
@@ -9,7 +10,8 @@ from models import DOMAIN, PRODUCT_NAME, SKELETON, SUB_DIRECTION, USERS
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
-DB_PATH = DATA / "app.db"
+# 允许经环境变量指向独立库（并发双请求脚本 / 红测隔离使用），默认仍为 data/app.db。
+DB_PATH = Path(os.environ.get("GRAYROLL_DB_FILE", DATA / "app.db"))
 FIXTURES = ROOT / "fixtures"
 FRONTEND = ROOT / "frontend"
 
@@ -23,8 +25,12 @@ PRODUCT_META = {
 
 def connect() -> sqlite3.Connection:
     DATA.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False, timeout=10.0)
     conn.row_factory = sqlite3.Row
+    # WAL：读者不阻塞、单写者串行；busy_timeout 让写者在锁竞争时排队而非立即抛错。
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA busy_timeout=10000")
     conn.execute("PRAGMA foreign_keys=ON")
     return conn
 
@@ -174,6 +180,19 @@ CREATE TABLE IF NOT EXISTS rollout_schedules(
   created_at REAL NOT NULL,
   created_by TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS rollout_roster(
+  id INTEGER PRIMARY KEY,
+  rule_id INTEGER NOT NULL UNIQUE,
+  flag_id INTEGER NOT NULL REFERENCES flags(id),
+  env_id INTEGER NOT NULL REFERENCES environments(id),
+  flag_key TEXT NOT NULL,
+  env_code TEXT NOT NULL,
+  status TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  percent INTEGER NOT NULL DEFAULT 0,
+  version INTEGER NOT NULL DEFAULT 1,
+  refreshed_at REAL NOT NULL
+);
 CREATE TABLE IF NOT EXISTS remote_push_stub(
   id INTEGER PRIMARY KEY,
   note TEXT NOT NULL DEFAULT '远程配置推送空桩未接通'
@@ -284,3 +303,7 @@ def init_db() -> None:
         conn.executescript(SCHEMA)
         seed(conn)
         conn.commit()
+    # 播种后构建一次可放量名册（与服务端刷新同一口径）。
+    from roster_svc import rebuild_roster
+
+    rebuild_roster()

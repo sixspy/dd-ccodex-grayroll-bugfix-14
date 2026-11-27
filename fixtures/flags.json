@@ -43,5 +43,14 @@
     "owner": "admin",
     "status": "draft",
     "created_at": 1700004000.0
+  },
+  {
+    "id": 6,
+    "key": "legacy.coupon_wallet",
+    "title": "旧版券包（灰态归档）",
+    "description": "灰态归档开关，留正式规则仅作留痕，禁止进入可放量名册",
+    "owner": "writer",
+    "status": "archived",
+    "created_at": 1700005000.0
   }
 ]
